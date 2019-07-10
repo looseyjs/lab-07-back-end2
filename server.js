@@ -15,13 +15,18 @@ const PORT = process.env.PORT;
 // Make my server
 const app = express();
 app.use(cors());
-
-// app.get('/location') is a route
+// app.get('/location') is a route that is an exposed endpoint that is opened with express.
+// this takes in a request and a response.  the request is what the user is requesting.
+// the response is what the code sends back. the response either processes the request successfully or sends a message that says something went wrong.
 app.get('/location', (request, response) => {
   try {
+    //brings in the data that was entered on the front end and sends it to searchToLatLng
     const locationData = searchToLatLng(request.query.data);
+    //if data is accessible, then the user request can be processed and sent off as a response
+    //the data will be sent to /location
     response.send(locationData);
   } catch (e) {
+    //if data can't be reached, a 500 status is shown. 500 status means that the data is unavailable
     response.status(500).send('Status 500: So sorry i broke')
   }
 })
