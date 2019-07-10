@@ -66,15 +66,21 @@ function weatherForecast() {
   return weather;
 }
 
+//refactror the callback function with the error hundling using catch error
 function searchToLatLng(locationName) {
-  const geoData = require('./data/geo.json');
-  const location = {
-    search_query: locationName,
-    formatted_query: geoData.results[0].formatted_address,
-    latitude: geoData.results[0].geometry.location.lat,
-    longitude: geoData.results[0].geometry.location.lng
+  try {
+    const geoData = require('./data/geo.json');
+    const location = {
+      search_query: locationName,
+      formatted_query: geoData.results[0].formatted_address,
+      latitude: geoData.results[0].geometry.location.lat,
+      longitude: geoData.results[0].geometry.location.lng
+    }
+    return location;
+  } catch (error) {
+    console.error(error);
+    console.log('Status 500: So sorry i broke');
   }
-  return location;
 }
 
 // Start the server
