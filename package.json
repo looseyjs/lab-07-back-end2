@@ -1,0 +1,25 @@
+{
+  "name": "lab-07-back-end2",
+  "version": "1.0.0",
+  "description": "**Author**: [Manish](https://github.com/jManij) and [BomiBear](https://github.com/bomibear) **Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/looseyjs/lab-07-back-end2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/looseyjs/lab-07-back-end2/issues"
+  },
+  "homepage": "https://github.com/looseyjs/lab-07-back-end2#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1"
+  }
+}
