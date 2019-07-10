@@ -31,12 +31,19 @@ app.get('/location', (request, response) => {
   }
 })
 
-//Route for weather
+// app.get('/weather') is a route that is an exposed endpoint that is opened with express.
+// this takes in a request and a response.  the request is what the user is requesting.
+// the response is what the code sends back. the response either processes the request successfully or sends a message that says something went wrong.
 app.get('/weather', (request, response) => {
   try {
+    //if data is accessible, then the user request can be processed and sent off as a response
+    //this data is based on the location that the user entered
     const weatherData = weatherForecast(request.query.data);
+    //this is the data sent back that matches to the user request
+    //the data will be sent to /weather
     response.send(weatherData);
   } catch (e) {
+    //if data can't be reached, a 500 status is shown. 500 status means that the data is unavailable
     response.status(500).send('Status 500: Sorry I broke while finding weather data');
   }
 })
