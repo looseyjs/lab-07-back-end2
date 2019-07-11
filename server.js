@@ -42,9 +42,27 @@ app.get('/location', searchToLatLng);
 // the response is what the code sends back. the response either processes the request successfully or sends a message that says something went wrong.
 app.get('/weather', weatherForecast);
 
+app.get('/events', eventSearch);
+
 app.use('*', (request, response) => {
   response.send('you got to the wrong place');
 })
+
+function eventSearch(request, response) {
+  const locationName = request.query.data;
+  console.log(locationName);
+  const lat = request.query.data.latitude;
+  const long = request.query.data.longitude;
+  const url = `https://www.eventbriteapi.com/v3/users/me/?token=${process.env.EVENT.API.KEY}`;
+  superagent.get(url)
+    .then( result => {
+      let forecast = result.body.daily.data.map(day => new Weather(day.summary, new Date(day.time * 1000).toDateString()));
+      response.send(forecast);
+    }).catch(e => {
+      console.error(e);
+      response.status(500).send('Status 500: Sorry I broke');
+    })
+}
 
 function weatherForecast(request, response) {
   const locationName = request.query.data;
@@ -68,17 +86,6 @@ function searchToLatLng (request, response){
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
   superagent.get(url)
     .then( result => {
-      // console.log('name is ' + locationName);
-      // console.log('request query data is ' + request.query.data);
-      // console.log('result is ' + result.body.results[0].locationName);
-      // console.log('address is ' + result.body.results[0].formatted_address);
-      // console.log('lat is ' + result.body.results[0].geometry.location.lat);
-      // console.log('long is ' + result.body.results[0].geometry.location.lng);
-      // response.send(new Location(
-      //   locationName,
-      //   result.body.results[0].formatted_address,
-      //   result.body.results[0].geometry.location.lat,
-      //   result.body.results[0].geometry.location.lng));
       let location = {
         search_query: locationName,
         formatted_query: result.body.results[0].formatted_address,
@@ -90,6 +97,12 @@ function searchToLatLng (request, response){
       console.error(e);
       response.status(500).send('Status 500: Sorry I broke');
     })
+}
+
+//Error handling function
+function handleError(error, response) {
+  console.log('Error: ', error);
+  response.status(500).send('Status 500: Error occured! Refer to the log for more information');
 }
 
 // Start the server
