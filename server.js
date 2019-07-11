@@ -19,17 +19,17 @@ const app = express();
 app.use(cors());
 
 //Weather constructor
-function Weather(forecast, time) {
-  this.forecast = forecast;
-  this.time = time
+function Weather(day) {
+  this.forecast = day.summary;
+  this.time = new Date(day.time * 1000).toDateString();
 }
 
 //Location constructor
-function Location(query, formatted_query, lat, long) {
+function Locations(query, result) {
   this.query = query;
-  this.formatted_query = formatted_query;
-  this.lat = lat;
-  this.long = long;
+  this.formatted_query = result.body.results[0].formatted_address;
+  this.lat = result.body.results[0].geometry.location.lat;
+  this.long = result.body.results[0].geometry.location.lng;
 }
 
 // app.get('/location') is a route that is an exposed endpoint that is opened with express.
@@ -54,7 +54,7 @@ function weatherForecast(request, response) {
   const url = `https://api.darksky.net/forecast/${process.env.DARK_SKY_API_KEY}/${lat},${long}`;
   superagent.get(url)
     .then( result => {
-      let forecast = result.body.daily.data.map(day => new Weather(day.summary, new Date(day.time * 1000).toDateString()));
+      let forecast = result.body.daily.data.map(day => new Weather(day));
       response.send(forecast);
     }).catch(e => {
       console.error(e);
@@ -68,23 +68,7 @@ function searchToLatLng (request, response){
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
   superagent.get(url)
     .then( result => {
-      // console.log('name is ' + locationName);
-      // console.log('request query data is ' + request.query.data);
-      // console.log('result is ' + result.body.results[0].locationName);
-      // console.log('address is ' + result.body.results[0].formatted_address);
-      // console.log('lat is ' + result.body.results[0].geometry.location.lat);
-      // console.log('long is ' + result.body.results[0].geometry.location.lng);
-      // response.send(new Location(
-      //   locationName,
-      //   result.body.results[0].formatted_address,
-      //   result.body.results[0].geometry.location.lat,
-      //   result.body.results[0].geometry.location.lng));
-      let location = {
-        search_query: locationName,
-        formatted_query: result.body.results[0].formatted_address,
-        latitude: result.body.results[0].geometry.location.lat,
-        longitude: result.body.results[0].geometry.location.lng,
-      }
+      let location = new Locations(locationName, result)
       response.send(location);
     }).catch(e => {
       console.error(e);
