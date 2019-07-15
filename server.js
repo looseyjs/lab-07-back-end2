@@ -7,7 +7,6 @@
 // APP dependencies
 require('dotenv').config();
 const superagent = require('superagent');
-
 const express = require('express');
 const cors = require('cors');
 
@@ -19,17 +18,23 @@ const app = express();
 app.use(cors());
 
 //Weather constructor
-function Weather(forecast, time) {
-  this.forecast = forecast;
-  this.time = time
+function Weather(day) {
+  this.forecast = day.summary;
+  this.time = new Date(day.time * 1000).toDateString();
 }
 
-//Location constructor
-function Location(query, formatted_query, lat, long) {
-  this.query = query;
-  this.formatted_query = formatted_query;
-  this.lat = lat;
-  this.long = long;
+function Locations(query, res) {
+  this.search_query = query;
+  this.formatted_query = res.body.results[0].formatted_address;
+  this.latitude = res.body.results[0].geometry.location.lat;
+  this.longitude = res.body.results[0].geometry.location.lng
+}
+
+function Event(data) {
+  this.name = data.name.text;
+  this.link = data.url;
+  this.event_date = new Date(data.start.local).toDateString();
+  this.summary = data.description.text;
 }
 
 // app.get('/location') is a route that is an exposed endpoint that is opened with express.
@@ -49,54 +54,38 @@ app.use('*', (request, response) => {
 })
 
 function eventSearch(request, response) {
-  const locationName = request.query.data;
-  console.log(locationName);
   const lat = request.query.data.latitude;
-  const long = request.query.data.longitude;
-  const url = `https://www.eventbriteapi.com/v3/users/me/?token=${process.env.EVENT.API.KEY}`;
+  const lng = request.query.data.longitude;
+  const url = `https://www.eventbriteapi.com/v3/events/search/?token=${process.env.EVENTBRITE_API_KEY}&location.latitude=${lat}&location.longitude=${lng}`
   superagent.get(url)
     .then( result => {
-      let forecast = result.body.daily.data.map(day => new Weather(day.summary, new Date(day.time * 1000).toDateString()));
-      response.send(forecast);
-    }).catch(e => {
-      console.error(e);
-      response.status(500).send('Status 500: Sorry I broke');
-    })
+      let allEvents = result.body.events.map( event => {
+        return new Event(event);
+      });
+      response.send(allEvents);
+    }).catch(error => handleError(error, response));
 }
 
 function weatherForecast(request, response) {
-  const locationName = request.query.data;
-  console.log(locationName);
   const lat = request.query.data.latitude;
   const long = request.query.data.longitude;
   const url = `https://api.darksky.net/forecast/${process.env.DARK_SKY_API_KEY}/${lat},${long}`;
   superagent.get(url)
     .then( result => {
-      let forecast = result.body.daily.data.map(day => new Weather(day.summary, new Date(day.time * 1000).toDateString()));
+      let forecast = result.body.daily.data.map(day => new Weather(day));
       response.send(forecast);
-    }).catch(e => {
-      console.error(e);
-      response.status(500).send('Status 500: Sorry I broke');
-    })
+    }).catch(error => handleError(error, response));
 }
 
 //refactror the callback function with the error handling using catch error
 function searchToLatLng (request, response){
-  const locationName = request.query.data;
+  let locationName = request.query.data;
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
   superagent.get(url)
     .then( result => {
-      let location = {
-        search_query: locationName,
-        formatted_query: result.body.results[0].formatted_address,
-        latitude: result.body.results[0].geometry.location.lat,
-        longitude: result.body.results[0].geometry.location.lng,
-      }
+      let location = new Locations(locationName, result);
       response.send(location);
-    }).catch(e => {
-      console.error(e);
-      response.status(500).send('Status 500: Sorry I broke');
-    })
+    }).catch(error => handleError(error, response));
 }
 
 //Error handling function
